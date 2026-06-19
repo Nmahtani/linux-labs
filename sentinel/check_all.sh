@@ -12,9 +12,9 @@ while IFS= read -r url; do
 
     # Report the result for this URL.
     if [ "$codigo" = "200" ]; then
-        echo "OK    - $url ($codigo)"
+        echo "OK - $url ($codigo)"
     else
-        echo "FALLO - $url ($codigo)"
+        echo "FAIL - $url ($codigo)"
     fi
 
 done < "$ARCHIVO"
