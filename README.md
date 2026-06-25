@@ -76,3 +76,7 @@ Websites to monitor are listed in `services.txt`, one URL per line:
 
 This is a learning project, built incrementally. It is intentionally simple and
 favors readability over completeness.
+
+## Author
+
+Nikhil Mahtani
