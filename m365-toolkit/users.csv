@@ -1,0 +1,7 @@
+Name,Email,Department,MFAEnabled,LicenseAssigned
+Ana Garcia,ana.garcia@empresa.com,IT,True,True
+Luis Perez,luis.perez@empresa.com,Sales,False,True
+Maria Lopez,maria.lopez@empresa.com,IT,True,True
+Carlos Ruiz,carlos.ruiz@empresa.com,Marketing,False,False
+Elena Diaz,elena.diaz@empresa.com,Sales,True,True
+Javier Sanz,javier.sanz@empresa.com,IT,False,True
