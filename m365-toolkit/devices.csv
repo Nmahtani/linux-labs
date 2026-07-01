@@ -1,0 +1,7 @@
+DeviceName,Owner,Type,OS,CompliantStatus
+LAPTOP-ANA,ana.garcia@empresa.com,Laptop,Windows 11,True
+MOBILE-LUIS,luis.perez@empresa.com,Mobile,iOS,False
+LAPTOP-MARIA,maria.lopez@empresa.com,Laptop,macOS,True
+LAPTOP-CARLOS,carlos.ruiz@empresa.com,Laptop,Windows 10,False
+MOBILE-ELENA,elena.diaz@empresa.com,Mobile,Android,True
+TABLET-JAVIER,javier.sanz@empresa.com,Tablet,iOS,False
