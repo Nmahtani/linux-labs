@@ -14,6 +14,11 @@ Write-Host ""
 if ($noMfa.Count -gt 0) {
     Write-Host "--- Users missing MFA ---"
     $noMfa | Select-Object Name, Email, Department | Format-Table -AutoSize
+    # Export results to a CSV file with today's date in the filename.
+    $date = Get-Date -Format "yyyy-MM-dd"
+    $outputFile = "report_mfa_$date.csv"
+    $noMfa | Export-Csv -Path $outputFile -NoTypeInformation
+    Write-Host "Report saved to: $outputFile"
 } else {
     Write-Host "All users have MFA enabled."
 }
