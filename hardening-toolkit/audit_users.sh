@@ -41,6 +41,8 @@ fi
 echo ""
 echo "[ Checking password expiry policy ]"
 never_expires=""
+# shellcheck disable=SC2034  # lastchange, min, warn are positional fields we skip
+while IFS=: read -r user pass lastchange min max warn; do
 while IFS=: read -r user pass lastchange min max warn; do
     # skip system accounts (UID < 1000) and locked accounts
     uid=$(awk -F: -v u="$user" '$1==u {print $3}' /etc/passwd 2>/dev/null)
