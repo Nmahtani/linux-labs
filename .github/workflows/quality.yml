@@ -1,18 +1,11 @@
-# quality.yml - Code quality pipeline for linux-labs
-#
-# Runs automatically on every push and pull request to main.
-# Checks Bash scripts, PowerShell scripts, repo structure, and file permissions.
-
 name: Code Quality
 
-# --- When to run ---
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
 
-# --- What to run ---
 jobs:
 
   environment-info:
@@ -35,3 +28,41 @@ jobs:
           echo ""
           echo "Repository contents:"
           find . -type f -name "*.sh" -o -name "*.ps1" | sort
+
+  bash-lint:
+    name: Bash Scripts — shellcheck
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Install shellcheck
+        run: sudo apt-get install -y shellcheck
+
+      - name: Run shellcheck on all Bash scripts
+        run: |
+          echo "Scanning Bash scripts..."
+          echo ""
+          FAILED=0
+          PASSED=0
+          SCRIPTS=$(find . -name "*.sh" | sort)
+
+          for script in $SCRIPTS; do
+            if shellcheck -e SC1091 "$script"; then
+              echo "  [PASS] $script"
+              ((PASSED++)) || true
+            else
+              echo "  [FAIL] $script"
+              ((FAILED++)) || true
+            fi
+            echo ""
+          done
+
+          echo "======================================"
+          echo " Bash lint results: $PASSED passed, $FAILED failed"
+          echo "======================================"
+
+          if [ "$FAILED" -gt 0 ]; then
+            exit 1
+          fi
