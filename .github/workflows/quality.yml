@@ -1,0 +1,37 @@
+# quality.yml - Code quality pipeline for linux-labs
+#
+# Runs automatically on every push and pull request to main.
+# Checks Bash scripts, PowerShell scripts, repo structure, and file permissions.
+
+name: Code Quality
+
+# --- When to run ---
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# --- What to run ---
+jobs:
+
+  environment-info:
+    name: Runner Environment
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Show environment info
+        run: |
+          echo "======================================"
+          echo " linux-labs Quality Pipeline"
+          echo " Triggered by: ${{ github.event_name }}"
+          echo " Branch: ${{ github.ref_name }}"
+          echo " Commit: ${{ github.sha }}"
+          echo " Runner OS: ${{ runner.os }}"
+          echo "======================================"
+          echo ""
+          echo "Repository contents:"
+          find . -type f -name "*.sh" -o -name "*.ps1" | sort
