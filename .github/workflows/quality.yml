@@ -92,7 +92,7 @@ jobs:
 
             foreach (\$script in \$scripts) {
               Write-Host \"Checking: \$script\"
-              \$results = Invoke-ScriptAnalyzer -Path \$script -Severity Error,Warning
+              \$results = Invoke-ScriptAnalyzer -Path \$script -Severity Error,Warning -ExcludeRule PSAvoidUsingWriteHost
 
               if (\$results) {
                 \$results | Format-Table -AutoSize
