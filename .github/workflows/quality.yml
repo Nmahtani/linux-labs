@@ -66,7 +66,7 @@ jobs:
           if [ "$FAILED" -gt 0 ]; then
             exit 1
           fi
-powershell-lint:
+  powershell-lint:
     name: PowerShell Scripts — PSScriptAnalyzer
     runs-on: ubuntu-latest
 
