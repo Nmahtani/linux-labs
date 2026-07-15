@@ -66,3 +66,48 @@ jobs:
           if [ "$FAILED" -gt 0 ]; then
             exit 1
           fi
+powershell-lint:
+    name: PowerShell Scripts — PSScriptAnalyzer
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Install PowerShell
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y powershell
+
+      - name: Install PSScriptAnalyzer
+        run: |
+          pwsh -Command "Install-Module -Name PSScriptAnalyzer -Force -Scope CurrentUser"
+
+      - name: Run PSScriptAnalyzer on all PowerShell scripts
+        run: |
+          pwsh -Command "
+            \$scripts = Get-ChildItem -Recurse -Filter '*.ps1' | Select-Object -ExpandProperty FullName
+            \$failed = 0
+            \$passed = 0
+
+            foreach (\$script in \$scripts) {
+              Write-Host \"Checking: \$script\"
+              \$results = Invoke-ScriptAnalyzer -Path \$script -Severity Error,Warning
+
+              if (\$results) {
+                \$results | Format-Table -AutoSize
+                \$failed++
+                Write-Host \"  [FAIL] \$script\"
+              } else {
+                Write-Host \"  [PASS] \$script\"
+                \$passed++
+              }
+              Write-Host ''
+            }
+
+            Write-Host '======================================'
+            Write-Host \" PowerShell lint results: \$passed passed, \$failed failed\"
+            Write-Host '======================================'
+
+            if (\$failed -gt 0) { exit 1 }
+          "
