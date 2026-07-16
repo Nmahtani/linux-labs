@@ -111,3 +111,58 @@ jobs:
 
             if (\$failed -gt 0) { exit 1 }
           "
+		repo-structure:
+    name: Repository Structure
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Check every project has a README
+        run: |
+          echo "[ Checking for README files ]"
+          FAILED=0
+          for dir in sentinel m365-toolkit hardening-toolkit; do
+            if [[ -f "$dir/README.md" ]]; then
+              echo "  [PASS] $dir/README.md exists"
+            else
+              echo "  [FAIL] $dir/README.md is missing"
+              ((FAILED++)) || true
+            fi
+          done
+          echo ""
+          if [[ $FAILED -gt 0 ]]; then
+            echo "ERROR: $FAILED project(s) missing a README"
+            exit 1
+          fi
+
+      - name: Check scripts have executable permissions
+        run: |
+          echo "[ Checking executable permissions on scripts ]"
+          FAILED=0
+          while IFS= read -r script; do
+            if [[ -x "$script" ]]; then
+              echo "  [PASS] $script is executable"
+            else
+              echo "  [FAIL] $script is not executable"
+              ((FAILED++)) || true
+            fi
+          done < <(find . -name "*.sh" | sort)
+          echo ""
+          if [[ $FAILED -gt 0 ]]; then
+            echo "ERROR: $FAILED script(s) missing executable permission"
+            exit 1
+          fi
+
+      - name: Check no generated report files were committed
+        run: |
+          echo "[ Checking for accidentally committed report files ]"
+          REPORTS=$(find . -name "report_*.csv" -o -name "last_state.txt" | sort)
+          if [[ -z "$REPORTS" ]]; then
+            echo "  [PASS] No generated files found in the repository"
+          else
+            echo "  [FAIL] Generated files should not be committed:"
+            echo "$REPORTS"
+            exit 1
+          fi
