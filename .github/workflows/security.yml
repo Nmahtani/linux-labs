@@ -1,0 +1,166 @@
+# security.yml - Security scanning workflow for linux-labs
+#
+# Runs on every push AND on a weekly schedule every Monday at 08:00 UTC.
+# Scans for hardcoded secrets, dangerous patterns, and security anti-patterns.
+
+name: Security Scan
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '0 8 * * 1'    # Every Monday at 08:00 UTC
+
+jobs:
+
+  secret-scan:
+    name: Hardcoded Secrets Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Scan for hardcoded secrets and sensitive patterns
+        run: |
+          echo "======================================"
+          echo " Hardcoded Secrets Scan"
+          echo " $(date '+%Y-%m-%d %H:%M:%S')"
+          echo "======================================"
+          echo ""
+
+          FAILED=0
+
+          # Patterns that should never appear in source code
+          declare -A PATTERNS
+          PATTERNS["password assignment"]='password\s*=\s*["\x27][^"\x27]{3,}'
+          PATTERNS["api key assignment"]='api[_-]?key\s*=\s*["\x27][^"\x27]{3,}'
+          PATTERNS["secret assignment"]='secret\s*=\s*["\x27][^"\x27]{3,}'
+          PATTERNS["token assignment"]='token\s*=\s*["\x27][^"\x27]{3,}'
+          PATTERNS["GitHub PAT"]='ghp_[a-zA-Z0-9]{36}'
+          PATTERNS["AWS access key"]='AKIA[0-9A-Z]{16}'
+          PATTERNS["private key header"]='-----BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY-----'
+
+          for pattern_name in "${!PATTERNS[@]}"; do
+            pattern="${PATTERNS[$pattern_name]}"
+            matches=$(grep -rEi "$pattern" \
+              --include="*.sh" \
+              --include="*.ps1" \
+              --include="*.yml" \
+              --include="*.yaml" \
+              --include="*.conf" \
+              --include="*.env" \
+              --exclude-dir=".git" \
+              . 2>/dev/null || true)
+
+            if [[ -n "$matches" ]]; then
+              echo "  [FAIL] Possible $pattern_name found:"
+              echo "$matches" | head -5
+              echo ""
+              ((FAILED++)) || true
+            fi
+          done
+
+          if [[ $FAILED -eq 0 ]]; then
+            echo "  [PASS] No hardcoded secrets or sensitive patterns found"
+          fi
+
+          echo ""
+          echo "======================================"
+          echo " Secrets scan: $FAILED issue(s) found"
+          echo "======================================"
+
+          if [[ $FAILED -gt 0 ]]; then
+            exit 1
+          fi
+
+  bash-security:
+    name: Bash Security Patterns
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Install shellcheck
+        run: sudo apt-get install -y shellcheck
+
+      - name: Check for dangerous Bash patterns
+        run: |
+          echo "======================================"
+          echo " Bash Security Pattern Check"
+          echo "======================================"
+          echo ""
+
+          FAILED=0
+          WARNED=0
+
+          for script in $(find . -name "*.sh" | sort); do
+            issues=""
+
+            # Check for eval usage (dangerous - can execute arbitrary code)
+            if grep -qE "^\s*eval\s" "$script" 2>/dev/null; then
+              issues="$issues\n    [WARN] Uses 'eval' — can execute arbitrary code"
+              ((WARNED++)) || true
+            fi
+
+            # Check for curl piped to bash (extremely dangerous)
+            if grep -qE "curl.+\|\s*(bash|sh)" "$script" 2>/dev/null; then
+              issues="$issues\n    [FAIL] curl piped to bash — never do this in production"
+              ((FAILED++)) || true
+            fi
+
+            # Check for wget piped to bash
+            if grep -qE "wget.+\|\s*(bash|sh)" "$script" 2>/dev/null; then
+              issues="$issues\n    [FAIL] wget piped to bash — never do this in production"
+              ((FAILED++)) || true
+            fi
+
+            # Check for chmod 777
+            if grep -qE "chmod\s+777" "$script" 2>/dev/null; then
+              issues="$issues\n    [WARN] chmod 777 gives everyone full permissions"
+              ((WARNED++)) || true
+            fi
+
+            # Check for rm -rf without a variable check
+            if grep -qE "rm\s+-rf\s+/" "$script" 2>/dev/null; then
+              issues="$issues\n    [WARN] rm -rf on absolute path — verify this is intentional"
+              ((WARNED++)) || true
+            fi
+
+            if [[ -n "$issues" ]]; then
+              echo "  $script:"
+              echo -e "$issues"
+              echo ""
+            else
+              echo "  [PASS] $script"
+            fi
+          done
+
+          echo ""
+          echo "======================================"
+          echo " Security pattern check: $FAILED failures, $WARNED warnings"
+          echo "======================================"
+
+          if [[ $FAILED -gt 0 ]]; then
+            exit 1
+          fi
+
+  summary:
+    name: Security Summary
+    runs-on: ubuntu-latest
+    needs: [secret-scan, bash-security]
+    if: always()
+
+    steps:
+      - name: Write security summary
+        run: |
+          echo "## Security Scan Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|---|---|" >> $GITHUB_STEP_SUMMARY
+          echo "| Hardcoded Secrets | ${{ needs.secret-scan.result == 'success' && '✅ Clean' || '❌ Issues found' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Bash Security Patterns | ${{ needs.bash-security.result == 'success' && '✅ Clean' || '❌ Issues found' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Scan date:** $(date '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
+          echo "**Trigger:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
