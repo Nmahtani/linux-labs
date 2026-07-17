@@ -166,7 +166,8 @@ jobs:
             echo "$REPORTS"
             exit 1
           fi
-summary:
+
+  summary:
     name: Pipeline Summary
     runs-on: ubuntu-latest
     needs: [environment-info, bash-lint, powershell-lint, repo-structure]
