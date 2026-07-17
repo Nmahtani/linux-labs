@@ -1,5 +1,7 @@
 # linux-labs
 
+[![Code Quality](https://github.com/Nmahtani/linux-labs/actions/workflows/quality.yml/badge.svg)](https://github.com/Nmahtani/linux-labs/actions/workflows/quality.yml)
+
 > A collection of hands-on IT and systems administration projects built to practice real-world skills across Linux, Bash, PowerShell, and Microsoft 365.
 > Each project solves a problem that comes up regularly in production environments.
 
