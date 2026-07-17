@@ -42,6 +42,16 @@ A Linux server security auditing toolkit based on CIS Benchmark controls. Audits
 
 ---
 
+### ⚙️ [CI/CD Pipeline](./github/workflows/) — Automated Quality & Security
+
+A two-workflow GitHub Actions pipeline that runs automatically on every push. Audits code quality across all projects and scans for security vulnerabilities — giving instant feedback without manual review.
+
+| | |
+|---|---|
+| **Stack** | GitHub Actions · shellcheck · PSScriptAnalyzer · cron scheduling |
+| **Skills** | CI/CD pipeline design · static code analysis · secrets scanning · YAML workflow authoring |
+---
+
 ## Repository structure
 
 ```
