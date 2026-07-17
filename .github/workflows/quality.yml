@@ -111,7 +111,7 @@ jobs:
 
             if (\$failed -gt 0) { exit 1 }
           "
-		repo-structure:
+  repo-structure:
     name: Repository Structure
     runs-on: ubuntu-latest
 
